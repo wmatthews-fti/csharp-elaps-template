@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "root", "template\csharp-elaps\root.csproj", "{4B107501-3C62-4277-B134-B7F7A5E2E7BC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Function", "template\csharp-elaps\function\Function.csproj", "{2EFBC941-56CD-471F-B91A-9462DD01C570}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B107501-3C62-4277-B134-B7F7A5E2E7BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B107501-3C62-4277-B134-B7F7A5E2E7BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B107501-3C62-4277-B134-B7F7A5E2E7BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B107501-3C62-4277-B134-B7F7A5E2E7BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFBC941-56CD-471F-B91A-9462DD01C570}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFBC941-56CD-471F-B91A-9462DD01C570}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFBC941-56CD-471F-B91A-9462DD01C570}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFBC941-56CD-471F-B91A-9462DD01C570}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D19A35C8-5F1E-4B8E-B82C-C6A548B5E62C}
+	EndGlobalSection
+EndGlobal
