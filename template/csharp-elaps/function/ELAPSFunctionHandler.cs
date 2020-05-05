@@ -48,7 +48,7 @@ namespace Function
             //LOG stop to db or send message
         }
 
-        public async Task ReadFunctionCallDoc(string key)
+        public void ReadFunctionCallDoc(string key)
         {
             if (mongo == null)
                 return;

@@ -20,7 +20,7 @@ namespace Function
             var reader = new StreamReader(request.Body);
             var input = await reader.ReadToEndAsync();
 
-            await elaps.ReadFunctionCallDoc(input);
+            elaps.ReadFunctionCallDoc(input);
 
             #endregion
 
