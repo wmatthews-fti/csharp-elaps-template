@@ -36,7 +36,7 @@ namespace Function
 
             #endregion
 
-            return (200, $"Hello! Your input was {input}");
+            return (200, $"Function execution {input}");
         }
 
         public async Task<string> Execute()
