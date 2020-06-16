@@ -41,14 +41,14 @@ namespace Function
 
         public async Task LogStartAsync()
         {
-            //LOG start to db or send message
+            _ = logMessage($"Starting workflow with key [{Function.Key}]");
         }
-        public async Task LogStopAsync()
+        public async Task LogStopAsync(TimeSpan t)
         {
-            //LOG stop to db or send message
+            _ = logMessage($"Finished starting workflow with key [{Function.Key}] in {t.Seconds} seconds.");
         }
 
-        public void ReadFunctionCallDoc(string key)
+        public async Task ReadFunctionCallDoc(string key)
         {
             if (mongo == null)
                 return;
@@ -117,9 +117,8 @@ namespace Function
 
             try
             {
-                Function.Key = doc["key"].Value<string>();
                 Function.Name = doc["name"].Value<string>();
-                Function.Name = doc["name"].Value<string>();
+                Function.Workflow = doc["workflow"].Value<string>();
                 Function.Parameters = doc["params"].ToObject<Dictionary<string, string>>();
                 Function.Children = doc["functions"].Children().Select(x => x.ToObject<ELAPSFunction>()).ToList();
             }
@@ -137,6 +136,27 @@ namespace Function
                 HttpResponseMessage response = await client.PostAsync(uri, new StringContent(function.Key, Encoding.UTF8, "text/plain"));
                 return await response.Content.ReadAsStringAsync();
             }
+        }
+
+        private async Task logMessage(string message, string type="info")
+        {
+            if (mongo == null)
+                return;
+
+            var database = mongo.GetDatabase("elaps");
+            BsonDocument document = new BsonDocument();
+            document.Add("type", type);
+            document.Add("timestamp", DateTime.Now.ToString());
+            document.Add("source", Function.Name);
+            document.Add("message", message);
+            var collection = database.GetCollection<BsonDocument>("functionlogs");
+            await collection.InsertOneAsync(document);
+            //LOG function call created
+        }
+
+        private async Task logError(string message)
+        {
+            await logMessage(message, "error");
         }
     }
 }

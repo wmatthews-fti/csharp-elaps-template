@@ -12,15 +12,16 @@ namespace Function
         {
             #region Function Setup
 
-            // Start timer
-            elaps.StartTimer();
-            await elaps.LogStartAsync();
-
             //Read input string
             var reader = new StreamReader(request.Body);
             var input = await reader.ReadToEndAsync();
 
-            elaps.ReadFunctionCallDoc(input);
+            elaps.Function.Key = input;
+            // Start timer
+            elaps.StartTimer();
+            await elaps.LogStartAsync();
+
+            await elaps.ReadFunctionCallDoc(input);
 
             #endregion
 
@@ -32,11 +33,11 @@ namespace Function
 
             //Stop timer
             var duration = elaps.StopTimer();
-            await elaps.LogStopAsync();
+            await elaps.LogStopAsync(duration);
 
             #endregion
 
-            return (200, $"Function execution {input}");
+            return (200, $"Executing function with key {input}");
         }
 
         public async Task<string> Execute()

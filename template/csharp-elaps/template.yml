@@ -1,2 +1,2 @@
-language: elaps-csharp
+language: csharp-httprequest
 fprocess: dotnet ./root.dll
