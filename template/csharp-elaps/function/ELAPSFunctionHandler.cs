@@ -117,6 +117,7 @@ namespace Function
 
             try
             {
+                Function.Key = doc["_key"].Value<string>();
                 Function.Name = doc["name"].Value<string>();
                 Function.Workflow = doc["workflow"].Value<string>();
                 Function.Parameters = doc["params"].ToObject<Dictionary<string, string>>();
