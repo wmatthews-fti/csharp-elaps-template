@@ -1,9 +1,9 @@
-# OpenFaaS C# HTTP Template
+# OpenFaaS C# ELAPS Template
 
 This repository contains the template for OpenFaaS using the upgraded `of-watchdog` which allows for higher throughput.
 
 ```
-$ faas template store pull csharp-httprequest
+$ faas template pull https://github.com/wmatthews-fti/csharp-elaps-template
 $ faas new --list
 Languages available as templates:
 - csharp-httprequest
@@ -15,8 +15,8 @@ This template uses a middleware handler in an ASPNET Core Web API. This allows a
 First, pull the template with the faas CLI and create a new function:
 
 ```
-$ faas template store pull csharp-httprequest
-$ faas-cli new --lang csharp-httprequest <function name>
+$ faas template pull https://github.com/wmatthews-fti/csharp-elaps-template
+$ faas-cli new --lang csharp-elaps <function name>
 ```
 
 In the directory that was created, using the name of you function, you'll find `FunctionHandler.cs`. It will look like this:
@@ -32,16 +32,17 @@ namespace Function
     {
         public async Task<(int, string)> Handle(HttpRequest request)
         {
+        ....
             var reader = new StreamReader(request.Body);
             var input = await reader.ReadToEndAsync();
-
-            return (200, $"Hello! Your input was {input}");
+        .....
+            return (200, $"Function executed with input: {input}");
         }
     }
 }
 ```
 
-This is a simple implementation of a hello-world function. 
+This is a simple implementation of a basic ELAPS function. 
 
 You are able to add packages to your function using the `dotnet add package` syntax. The packages will be added to your final function's container automatically.
 
