@@ -10,7 +10,7 @@ namespace Function
         ELAPSFunctionHandler elaps = new ELAPSFunctionHandler(Environment.GetEnvironmentVariable("mongoEndpoint"));
         public async Task<(int, string)> Handle(HttpRequest request)
         {
-            #region Function Setup
+             #region Function Setup
 
             //Read input string
             var reader = new StreamReader(request.Body);
@@ -19,15 +19,15 @@ namespace Function
             elaps.Function.Key = input;
             // Start timer
             elaps.StartTimer();
-            await elaps.LogStartAsync();
+            _ = elaps.LogStartAsync();
 
-            await elaps.ReadFunctionCallDoc(input);
-
+            elaps.ReadFunctionCallDoc(input);
             #endregion
 
-            await Execute();
+            var callChildren = Execute();
 
-            await elaps.CallChildren();
+            if(callChildren)
+                _ = elaps.CallChildren();
 
             #region Function Teardown
 
@@ -37,12 +37,14 @@ namespace Function
 
             #endregion
 
-            return (200, $"Executing function with key {input}");
+            return (200, $"Function execution {input}");
         }
 
-        public async Task<string> Execute()
+        public bool Execute()
         {
-            return "Function executed successfully";
+            // If function should not block, use asyncronous "fire and forget" function calls using the _ = function() notation
+            // If child functions are called during execution, return false
+            return true;
         }
     }
 }

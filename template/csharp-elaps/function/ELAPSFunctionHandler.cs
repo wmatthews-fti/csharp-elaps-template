@@ -41,18 +41,23 @@ namespace Function
 
         public async Task LogStartAsync()
         {
-            _ = logMessage($"Starting workflow with key [{Function.Key}]");
+            _ = logMessage($"Starting function with key [{Function.Key}]");
         }
         public async Task LogStopAsync(TimeSpan t)
         {
-            _ = logMessage($"Finished starting workflow with key [{Function.Key}] in {t.Seconds} seconds.");
+            _ = logMessage($"Finished starting function with key [{Function.Key}] in {t.Seconds} seconds.");
         }
 
-        public async Task ReadFunctionCallDoc(string key)
+        public void ReadFunctionCallDoc(string key)
         {
-            if (mongo == null)
-                return;
 
+            if (mongo == null)
+            {
+                _ = logError("Mongo object is null");
+                return;
+            }
+
+            _ = logMessage($"Retrieving function call for key {key}");
             try
             {
                 var database = mongo.GetDatabase("elaps");
@@ -66,7 +71,7 @@ namespace Function
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error retrieving function doc: {ex.Message}");
+                logError($"Error retrieving function doc: {ex.Message}");
             }
         }
 
@@ -92,7 +97,7 @@ namespace Function
 
                     //Write function call doc
                     await writeFunctionCallDocAsync(child);
-                    await callFunction(child);
+                    _ = callFunction(child);
                 }
             }
         }
@@ -100,7 +105,10 @@ namespace Function
         private async Task writeFunctionCallDocAsync(ELAPSFunction child)
         {
             if (mongo == null)
+            {
+                _ = logError("Mongo object is null");
                 return;
+            }
 
             var database = mongo.GetDatabase("elaps");
             child.Key = Guid.NewGuid().ToString();
@@ -129,18 +137,21 @@ namespace Function
             }
         }
 
-        private async Task<string> callFunction(ELAPSFunction function)
-        {
+        private async Task callFunction(ELAPSFunction function)
+        {            
             using (var client = new HttpClient())
             {
                 var uri = new Uri($"http://gateway:8080/function/{function.Name}");
                 HttpResponseMessage response = await client.PostAsync(uri, new StringContent(function.Key, Encoding.UTF8, "text/plain"));
-                return await response.Content.ReadAsStringAsync();
+                var result = await response.Content.ReadAsStringAsync();
+                _ = logMessage($"Result of call to {uri.ToString()}: {result}");
             }
         }
 
-        private async Task logMessage(string message, string type="info")
+        public async Task logMessage(string message, string type="info")
         {
+            Console.WriteLine($"[{type}] {message}");
+
             if (mongo == null)
                 return;
 
@@ -155,7 +166,7 @@ namespace Function
             //LOG function call created
         }
 
-        private async Task logError(string message)
+        public async Task logError(string message)
         {
             await logMessage(message, "error");
         }
