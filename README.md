@@ -74,3 +74,33 @@ namespace Function
     }
 }
 ```
+
+Sample workflow:
+
+{
+    "name": "MinIO Object Mover",
+    "key": "ec499a49-0606-4f4c-bce6-6d55dbae28be",
+    "active": true,
+    "priority": 500,
+    "functions": [
+        {
+            "name": "elaps-objectstorage-bucketreader",
+            "params": {
+                "minioEndpoint": "10.0.1.23:9000",
+                "minioAccessKey": "minioadmin",
+                "minioSecretKey": "minioadmin",
+                "bucket": "ar-data",
+                "newBucket": "elaps-ar-data"
+            },
+            "functions": [
+                {
+                    "name": "elaps-objectstorage-objectmover",
+                    "params": {
+                        "objectName": null
+                    },
+                    "functions": []
+                }
+            ]
+        }
+    ]
+}
