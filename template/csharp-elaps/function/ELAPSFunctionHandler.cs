@@ -41,11 +41,11 @@ namespace Function
 
         public async Task LogStartAsync()
         {
-            _ = logMessage($"Starting function with key [{Function.Key}]");
+            await logMessage($"Starting function with key [{Function.Key}]");
         }
         public async Task LogStopAsync(TimeSpan t)
         {
-            _ = logMessage($"Finished starting function with key [{Function.Key}] in {t.Seconds} seconds.");
+            await logMessage($"Finished starting function with key [{Function.Key}] in {t.Seconds} seconds.");
         }
 
         public void ReadFunctionCallDoc(string key)
@@ -53,11 +53,11 @@ namespace Function
 
             if (mongo == null)
             {
-                _ = logError("Mongo object is null");
+                logError("Mongo object is null");
                 return;
             }
 
-            _ = logMessage($"Retrieving function call for key {key}");
+            logMessage($"Retrieving function call for key {key}");
             try
             {
                 var database = mongo.GetDatabase("elaps");
@@ -97,7 +97,7 @@ namespace Function
 
                     //Write function call doc
                     await writeFunctionCallDocAsync(child);
-                    _ = callFunction(child);
+                    await callFunction(child);
                 }
             }
         }
@@ -106,7 +106,7 @@ namespace Function
         {
             if (mongo == null)
             {
-                _ = logError("Mongo object is null");
+                await logError("Mongo object is null");
                 return;
             }
 
@@ -141,10 +141,13 @@ namespace Function
         {            
             using (var client = new HttpClient())
             {
+                await logMessage($"Calling function {function.Name}");
+                // For kubernetes, use "gateway.openfaas:8080"
+                // var uri = new Uri($"http://gateway.openfaas:8080/function/{function.Name}");
                 var uri = new Uri($"http://gateway:8080/function/{function.Name}");
                 HttpResponseMessage response = await client.PostAsync(uri, new StringContent(function.Key, Encoding.UTF8, "text/plain"));
                 var result = await response.Content.ReadAsStringAsync();
-                _ = logMessage($"Result of call to {uri.ToString()}: {result}");
+                await logMessage($"Result of call to {uri.ToString()}: {result}");
             }
         }
 
@@ -159,7 +162,7 @@ namespace Function
             BsonDocument document = new BsonDocument();
             document.Add("type", type);
             document.Add("timestamp", DateTime.Now.ToString());
-            document.Add("source", Function.Name);
+            document.Add("source", Function?.Name ?? string.Empty);
             document.Add("message", message);
             var collection = database.GetCollection<BsonDocument>("functionlogs");
             await collection.InsertOneAsync(document);
