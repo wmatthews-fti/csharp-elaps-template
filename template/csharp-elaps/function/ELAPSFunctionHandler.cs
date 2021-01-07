@@ -17,15 +17,18 @@ namespace Function
         Stopwatch timer;
         MongoClient mongo;
         public ELAPSFunction Function { get; set; }
+        public bool EnableLogging { get; set; }
 
         public ELAPSFunctionHandler()
         {
             Function = new ELAPSFunction { Parameters = new Dictionary<string, string>(), Children = new List<ELAPSFunction>() };
+            EnableLogging = true;
         }
 
         public ELAPSFunctionHandler(string mongoEndpoint) : this()
         {
             mongo = new MongoClient($"mongodb://{mongoEndpoint}");
+            EnableLogging = true;
         }
 
         public void StartTimer()
@@ -41,23 +44,23 @@ namespace Function
 
         public async Task LogStartAsync()
         {
-            await logMessage($"Starting function with key [{Function.Key}]");
+            _ = logMessage($"Starting function with key [{Function.Key}]");
         }
         public async Task LogStopAsync(TimeSpan t)
         {
-            await logMessage($"Finished starting function with key [{Function.Key}] in {t.Seconds} seconds.");
+            _ = logMessage($"Finished starting function with key [{Function.Key}] in {t.Milliseconds/1000d} seconds.");
         }
 
-        public void ReadFunctionCallDoc(string key)
+        public bool ReadFunctionCallDoc(string key)
         {
 
             if (mongo == null)
             {
-                logError("Mongo object is null");
-                return;
+                _ = logError("Mongo object is null");
+                return false;
             }
 
-            logMessage($"Retrieving function call for key {key}");
+            _ = logMessage($"Retrieving function call for key {key}");
             try
             {
                 var database = mongo.GetDatabase("elaps");
@@ -67,23 +70,29 @@ namespace Function
                 var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
 
                 var result = JObject.Parse(task.ToJson<BsonDocument>(jsonWriterSettings));
-                parseFunctionDoc(result);
+                return parseFunctionDoc(result);
             }
             catch (Exception ex)
             {
-                logError($"Error retrieving function doc: {ex.Message}");
+                _ = logError($"Error retrieving function doc: {ex.Message}");
+                return false;
             }
         }
 
         public async Task CallChildren()
         {
-            if (Function.Children.Any())
+            await CallChildren(this.Function);
+        }
+
+        public async Task CallChildren(ELAPSFunction functionCopy)
+        {
+            if (functionCopy.Children.Any())
             {
                 // Set up each child function
-                foreach (var child in Function.Children)
+                foreach (var child in functionCopy.Children)
                 {
                     //Write inherited parameters down to child
-                    foreach (var p in Function.Parameters)
+                    foreach (var p in functionCopy.Parameters)
                     {
                         if (child.Parameters.ContainsKey(p.Key))
                         {
@@ -97,7 +106,7 @@ namespace Function
 
                     //Write function call doc
                     await writeFunctionCallDocAsync(child);
-                    await callFunction(child);
+                    _ = callFunction(child);
                 }
             }
         }
@@ -106,7 +115,7 @@ namespace Function
         {
             if (mongo == null)
             {
-                await logError("Mongo object is null");
+                _ = logError("Mongo object is null");
                 return;
             }
 
@@ -118,10 +127,10 @@ namespace Function
             //LOG function call created
         }
 
-        private void parseFunctionDoc(JObject doc)
+        private bool parseFunctionDoc(JObject doc)
         {
             if (doc.Type == JTokenType.Null)
-                return;
+                return false;
 
             try
             {
@@ -130,10 +139,12 @@ namespace Function
                 Function.Workflow = doc["workflow"].Value<string>();
                 Function.Parameters = doc["params"].ToObject<Dictionary<string, string>>();
                 Function.Children = doc["functions"].Children().Select(x => x.ToObject<ELAPSFunction>()).ToList();
+                return true;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error parsing function doc: {ex.Message}");
+                _ = logError($"Error parsing function doc: {ex.Message}");
+                return false;
             }
         }
 
@@ -141,10 +152,8 @@ namespace Function
         {            
             using (var client = new HttpClient())
             {
-                await logMessage($"Calling function {function.Name}");
-                // For kubernetes, use "gateway.openfaas:8080"
-                // var uri = new Uri($"http://gateway.openfaas:8080/function/{function.Name}");
-                var uri = new Uri($"http://gateway:8080/function/{function.Name}");
+                // Use http://gateway:8080/... for docker swarm
+                var uri = new Uri($"http://gateway.openfaas:8080/function/{function.Name}");
                 HttpResponseMessage response = await client.PostAsync(uri, new StringContent(function.Key, Encoding.UTF8, "text/plain"));
                 var result = await response.Content.ReadAsStringAsync();
                 await logMessage($"Result of call to {uri.ToString()}: {result}");
@@ -154,6 +163,8 @@ namespace Function
         public async Task logMessage(string message, string type="info")
         {
             Console.WriteLine($"[{type}] {message}");
+            if (!EnableLogging)
+                return;
 
             if (mongo == null)
                 return;
@@ -162,11 +173,10 @@ namespace Function
             BsonDocument document = new BsonDocument();
             document.Add("type", type);
             document.Add("timestamp", DateTime.Now.ToString());
-            document.Add("source", Function?.Name ?? string.Empty);
+            document.Add("source", Function.Name);
             document.Add("message", message);
             var collection = database.GetCollection<BsonDocument>("functionlogs");
             await collection.InsertOneAsync(document);
-            //LOG function call created
         }
 
         public async Task logError(string message)

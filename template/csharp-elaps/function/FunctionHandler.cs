@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 namespace Function
 {
     public class FunctionHandler
-    {
-        ELAPSFunctionHandler elaps = new ELAPSFunctionHandler(Environment.GetEnvironmentVariable("mongoEndpoint"));
+    {        
         public async Task<(int, string)> Handle(HttpRequest request)
         {
              #region Function Setup
-
+            var elaps = new ELAPSFunctionHandler(Environment.GetEnvironmentVariable("mongoEndpoint"));
             //Read input string
             var reader = new StreamReader(request.Body);
             var input = await reader.ReadToEndAsync();
@@ -19,15 +18,15 @@ namespace Function
             elaps.Function.Key = input;
             // Start timer
             elaps.StartTimer();
-            await elaps.LogStartAsync();
+            _ = elaps.LogStartAsync();
 
             elaps.ReadFunctionCallDoc(input);
             #endregion
 
-            var callChildren = await Execute();
+            var callChildren = Execute(elaps);
 
             if(callChildren)
-                await elaps.CallChildren();
+                _ = elaps.CallChildren();
 
             #region Function Teardown
 
@@ -40,15 +39,9 @@ namespace Function
             return (200, $"Function execution {input}");
         }
 
-        public async Task<bool> Execute()
+        public bool Execute(ELAPSFunctionHandler elaps)
         {
-            // If function should not block, use asyncronous "fire and forget" function calls using the _ = function() notation
-            // If child functions are called during execution, return false
-            var t = Task.Run(async () => {
-                await Task.Delay(30000);
-                await elaps.logMessage($"Finished: {elaps.Function.Parameters["message"]}");
-            }); 
-            
+            // If callChildren() is called explicitly within this function, return false to prevent call to children after Execute()
             return true;
         }
     }

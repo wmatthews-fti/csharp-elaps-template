@@ -9,6 +9,7 @@ public class Startup
 {
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<FunctionHandler>();
     }
 
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -31,7 +32,7 @@ public class Startup
 
             try
             {
-                var (status, text) = await new FunctionHandler().Handle(context.Request);
+                var (status, text) = await app.ApplicationServices.GetService<FunctionHandler>().Handle(context.Request);
                 context.Response.StatusCode = status;
                 if (!string.IsNullOrEmpty(text))
                     await context.Response.WriteAsync(text);

@@ -1,12 +1,4 @@
-FROM alpine:3.8 as watchdog
-
-RUN apk --no-cache add curl \
-    && echo "Pulling watchdog binary from Github." \
-    && curl -sSL https://github.com/openfaas-incubator/of-watchdog/releases/download/0.5.1/of-watchdog > /usr/bin/fwatchdog \
-    && chmod +x /usr/bin/fwatchdog \
-    && cp /usr/bin/fwatchdog /home/app \
-    && apk del curl --no-cache
-
+FROM openfaas/of-watchdog:0.7.7 as watchdog
 FROM mcr.microsoft.com/dotnet/core/sdk:2.2 as builder
 
 # Supress collection of data.
@@ -28,7 +20,8 @@ RUN dotnet publish -c release -o published
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 
-COPY --from=watchdog /usr/bin/fwatchdog  /usr/bin/
+COPY --from=watchdog /fwatchdog  /usr/bin/
+RUN chmod +x /usr/bin/fwatchdog
 
 # Create a non-root user
 RUN addgroup --system app \
